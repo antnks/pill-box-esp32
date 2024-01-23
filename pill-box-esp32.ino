@@ -8,7 +8,8 @@
 #define HAL 13
 #define WIFISSID "mywifi"
 #define WIFIPSK  "mypass"
-#define URL "https://myserver/script"
+#define CONFURL "https://myserver/config"
+#define LOGURL "https://myserver/script"
 
 WiFiMulti WiFiMulti;
 const char* rootCACertificate;
@@ -28,6 +29,8 @@ void setup()
 
   setNtp();
 
+  Serial.println(upload_data(CONFURL));
+
   pinMode(HAL, INPUT_PULLUP);
   pinMode(RED, OUTPUT);
   digitalWrite(RED, LOW);
@@ -35,29 +38,34 @@ void setup()
 
 unsigned long lastOpen;
 int state;
+int cooldown = 3000;
+int open_too_long = 10000;
+int CLOSED = 0;
+int OPENED = 1;
+
 
 void loop()
 {
   // closed
-  if(state == 1 && digitalRead(HAL) == 0)
+  if(state == OPENED && digitalRead(HAL) == CLOSED)
   {
-    state = 0;
+    state = CLOSED;
     digitalWrite(RED, LOW);
     Serial.println("closed");
   }
 
   // opened
-  if(state == 0 && digitalRead(HAL) == 1 && millis() > lastOpen + 3000)
+  if(state == CLOSED && digitalRead(HAL) == OPENED && millis() > lastOpen + cooldown)
   {
-    state = 1;
+    state = OPENED;
     lastOpen = millis();
     digitalWrite(RED, HIGH);
     Serial.println("opened");
-    Serial.println(upload_data());
+    Serial.println(upload_data(LOGURL));
   }
 
   // open for too long
-  if(state == 1 && digitalRead(HAL) == 1 && millis() > lastOpen + 10000)
+  if(state == OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + open_too_long)
   {
     digitalWrite(RED, LOW);
     delay(500);
@@ -67,13 +75,14 @@ void loop()
   delay(500);
 }
 
-String upload_data()
+String upload_data(char *URL)
 {
   WiFiClientSecure *client = new WiFiClientSecure;
   if(client)
   {
     // cloudflare
     rootCACertificate = \
+    /*
     "-----BEGIN CERTIFICATE-----\n" \
     "MIIDzTCCArWgAwIBAgIQCjeHZF5ftIwiTv0b7RQMPDANBgkqhkiG9w0BAQsFADBa\n" \
     "MQswCQYDVQQGEwJJRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJl\n" \
@@ -97,9 +106,8 @@ String upload_data()
     "CZMRJCQUzym+5iPDuI9yP+kHyCREU3qzuWFloUwOxkgAyXVjBYdwRVKD05WdRerw\n" \
     "6DEdfgkfCv4+3ao8XnTSrLE=\n" \
     "-----END CERTIFICATE-----\n";
-
+    */
     // lets encrypt
-    /*
       "-----BEGIN CERTIFICATE-----\n" \
       "MIIFFjCCAv6gAwIBAgIRAJErCErPDBinU/bWLiWnX1owDQYJKoZIhvcNAQELBQAw\n" \
       "TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\n" \
@@ -130,7 +138,7 @@ String upload_data()
       "MldlTTKB3zhThV1+XWYp6rjd5JW1zbVWEkLNxE7GJThEUG3szgBVGP7pSWTUTsqX\n" \
       "nLRbwHOoq7hHwg==\n" \
       "-----END CERTIFICATE-----\n";
-*/
+
     client->setCACert(rootCACertificate);
 
     {
@@ -155,14 +163,14 @@ String upload_data()
         }
         else
         {
-          //Serial.printf("error: %s\n", https.errorToString(httpCode).c_str());
+          Serial.printf("error: %s\n", https.errorToString(httpCode).c_str());
         }
   
         https.end();
       }
       else
       {
-        //Serial.printf("Unable to connect\n");
+        Serial.printf("Unable to connect\n");
       }
     }
   
@@ -170,7 +178,7 @@ String upload_data()
   }
   else
   {
-    //Serial.println("Unable to create client");
+    Serial.println("Unable to create client");
   }
   return "";
 }
