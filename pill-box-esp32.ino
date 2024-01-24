@@ -4,12 +4,25 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 
-#define RED 15
-#define HAL 13
+#define HOUR 3600000 //60*60*1000
+#define RED  15
+#define HAL  13
 #define WIFISSID "mywifi"
 #define WIFIPSK  "mypass"
 #define CONFURL "https://myserver/config"
 #define LOGURL "https://myserver/script"
+
+unsigned int morning;
+unsigned int evening;
+
+unsigned long lastOpen;
+int state;
+unsigned long cooldown = 3000;
+unsigned long open_too_long = 10000;
+unsigned long day_pill_interval = (evening - morning) * HOUR;
+unsigned long night_pill_interval = (morning + (24 - evening)) * HOUR;
+int CLOSED = 0;
+int OPENED = 1;
 
 WiFiMulti WiFiMulti;
 const char* rootCACertificate;
@@ -30,19 +43,13 @@ void setup()
   setNtp();
 
   Serial.println(upload_data(CONFURL));
+  morning = 7;
+  evening = 20;
 
   pinMode(HAL, INPUT_PULLUP);
   pinMode(RED, OUTPUT);
   digitalWrite(RED, LOW);
 }
-
-unsigned long lastOpen;
-int state;
-int cooldown = 3000;
-int open_too_long = 10000;
-int CLOSED = 0;
-int OPENED = 1;
-
 
 void loop()
 {
@@ -67,12 +74,37 @@ void loop()
   // open for too long
   if(state == OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + open_too_long)
   {
-    digitalWrite(RED, LOW);
-    delay(500);
-    digitalWrite(RED, HIGH);
+    blink();
+  }
+
+  // overdue
+  int hour = get_hour();
+  unsigned long stamp = millis();
+  long diff = stamp - lastOpen;
+  if(state == CLOSED && hour > morning && hour < evening && diff > night_pill_interval)
+  {
+    blink2();
+  }
+
+  if(state == CLOSED && hour > evening && hour < 24 && diff > day_pill_interval)
+  {
+    blink2();
   }
 
   delay(500);
+}
+
+unsigned int get_hour()
+{
+  time_t now;
+  struct tm timeinfo;
+
+  time(&now);
+  setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
+  tzset();
+  localtime_r(&now, &timeinfo);
+
+  return timeinfo.tm_hour;
 }
 
 String upload_data(char *URL)
@@ -183,8 +215,6 @@ String upload_data(char *URL)
   return "";
 }
 
-
-
 void setNtp()
 {
   configTime(0, 0, "pool.ntp.org");
@@ -200,8 +230,28 @@ void setNtp()
   }
 
   Serial.println();
-  struct tm timeinfo;
-  gmtime_r(&nowSecs, &timeinfo);
-  Serial.print("Current time: ");
-  Serial.print(asctime(&timeinfo));
+  Serial.print("Current hour: ");
+  Serial.println(get_hour());
+}
+
+void blink()
+{
+  digitalWrite(RED, LOW);
+  delay(500);
+  digitalWrite(RED, HIGH);
+}
+
+void blink2()
+{
+  digitalWrite(RED, LOW);
+  delay(100);
+  digitalWrite(RED, HIGH);
+  delay(100);
+  digitalWrite(RED, LOW);
+  delay(100);
+  digitalWrite(RED, HIGH);
+  delay(100);
+  digitalWrite(RED, LOW);
+  delay(100);
+  digitalWrite(RED, HIGH);
 }
