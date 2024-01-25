@@ -16,13 +16,14 @@ unsigned int morning;
 unsigned int evening;
 
 unsigned long lastOpen;
-int state;
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
 unsigned long day_pill_interval = (evening - morning) * HOUR;
 unsigned long night_pill_interval = (morning + (24 - evening)) * HOUR;
+int state;
 int CLOSED = 0;
 int OPENED = 1;
+int OVERDUE = 2;
 
 WiFiMulti WiFiMulti;
 const char* rootCACertificate;
@@ -71,22 +72,24 @@ void loop()
     Serial.println(upload_data(LOGURL));
   }
 
-  // open for too long
+  // overdue
+  int hour = get_hour();
+  unsigned long stamp = millis();
+  long diff = stamp - lastOpen;
+  if(state == CLOSED && (hour >= morning && hour < evening && diff > night_pill_interval ||
+                         hour >= evening && hour < 24      && diff > day_pill_interval))
+  {
+    state = OVERDUE;
+  }
+
+  // blink if open for too long
   if(state == OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + open_too_long)
   {
     blink();
   }
 
-  // overdue
-  int hour = get_hour();
-  unsigned long stamp = millis();
-  long diff = stamp - lastOpen;
-  if(state == CLOSED && hour > morning && hour < evening && diff > night_pill_interval)
-  {
-    blink2();
-  }
-
-  if(state == CLOSED && hour > evening && hour < 24 && diff > day_pill_interval)
+  // blink even more if overdue
+  if(state == OVERDUE)
   {
     blink2();
   }
