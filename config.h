@@ -8,11 +8,12 @@ char *LOGURL = "https://myserver/script";
 
 unsigned int morning;
 unsigned int evening;
+unsigned long day_pill_interval;
+unsigned long night_pill_interval;
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
-unsigned long day_pill_interval = (evening - morning) * HOUR;
-unsigned long night_pill_interval = (morning + (24 - evening)) * HOUR;
+
 int CLOSED = 0;
 int OPENED = 1;
 int OVERDUE = 2;

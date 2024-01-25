@@ -32,12 +32,20 @@ void setup()
   pinMode(HAL, INPUT_PULLUP);
   pinMode(RED, OUTPUT);
   digitalWrite(RED, LOW);
+
+  day_pill_interval = (evening - morning) * HOUR;
+  night_pill_interval = (morning + (24 - evening)) * HOUR;
+  state = CLOSED;
 }
 
 void loop()
 {
+  int hour = get_hour();
+  unsigned long stamp = millis();
+  long diff = stamp - lastOpen;
+
   // closed
-  if(state == OPENED && digitalRead(HAL) == CLOSED)
+  if(state != CLOSED && digitalRead(HAL) == CLOSED)
   {
     state = CLOSED;
     digitalWrite(RED, LOW);
@@ -45,7 +53,7 @@ void loop()
   }
 
   // opened
-  if(state == CLOSED && digitalRead(HAL) == OPENED && millis() > lastOpen + cooldown)
+  if(state != OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + cooldown)
   {
     state = OPENED;
     lastOpen = millis();
@@ -55,9 +63,6 @@ void loop()
   }
 
   // overdue
-  int hour = get_hour();
-  unsigned long stamp = millis();
-  long diff = stamp - lastOpen;
   if(state == CLOSED && (hour >= morning && hour < evening && diff > night_pill_interval ||
                          hour >= evening && hour < 24      && diff > day_pill_interval))
   {
