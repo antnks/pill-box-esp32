@@ -8,8 +8,7 @@ char *LOGURL = "https://myserver/script";
 
 unsigned int morning;
 unsigned int evening;
-unsigned long day_pill_interval;
-unsigned long night_pill_interval;
+bool isMorningDone;
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
@@ -135,6 +134,13 @@ unsigned int get_hour()
   localtime_r(&now, &timeinfo);
 
   return timeinfo.tm_hour;
+}
+
+bool morningDone()
+{
+  int hour = get_hour();
+
+  return hour < morning + (evening - morning)/2;
 }
 
 void setNtp()
