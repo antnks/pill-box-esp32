@@ -79,7 +79,7 @@ const char *rootCACertificate= \
   WiFiClientSecure *client = new WiFiClientSecure;
   if(client)
   {
-    client->setCACert(rootCACertificate);
+    client->setInsecure();
 
     {
       HTTPClient https;
