@@ -13,9 +13,9 @@ bool isMorningDone;
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
 
-int CLOSED = 0;
-int OPENED = 1;
-int OVERDUE = 2;
+int STATE_CLOSED = 0;
+int STATE_OPENED = 1;
+int STATE_OVERDUE = 2;
 
 const char *rootCACertificate= \
     /*

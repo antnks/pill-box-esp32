@@ -35,7 +35,7 @@ void setup()
 
   // initial state is always "pill has been just taken"
   isMorningDone = morningDone();
-  state = CLOSED;
+  state = STATE_CLOSED;
   lastOpen = millis();
 
 }
@@ -47,17 +47,17 @@ void loop()
   unsigned long diff = stamp - lastOpen;
 
   // closed
-  if(state != CLOSED && digitalRead(HAL) == CLOSED)
+  if(state != STATE_CLOSED && digitalRead(HAL) == STATE_CLOSED)
   {
-    state = CLOSED;
+    state = STATE_CLOSED;
     digitalWrite(RED, LOW);
     Serial.println("closed");
   }
 
   // opened
-  if(state != OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + cooldown)
+  if(state != STATE_OPENED && digitalRead(HAL) == STATE_OPENED && millis() > lastOpen + cooldown)
   {
-    state = OPENED;
+    state = STATE_OPENED;
     lastOpen = millis();
     isMorningDone = morningDone();
     digitalWrite(RED, HIGH);
@@ -66,23 +66,24 @@ void loop()
   }
 
   // overdue
-  if(state == CLOSED && (hour >= morning && hour < evening && !isMorningDone ||
+  if(state == STATE_CLOSED && (hour >= morning && hour < evening && !isMorningDone ||
                          hour >= evening && hour < 24      &&  isMorningDone))
   {
-    state = OVERDUE;
+    state = STATE_OVERDUE;
   }
 
   // blink if open for too long
-  if(state == OPENED && digitalRead(HAL) == OPENED && millis() > lastOpen + open_too_long)
+  if(state == STATE_OPENED && digitalRead(HAL) == STATE_OPENED && millis() > lastOpen + open_too_long)
   {
     blink1();
   }
 
   // blink even more if overdue
-  if(state == OVERDUE)
+  if(state == STATE_OVERDUE)
   {
     blink2();
   }
 
   delay(500);
 }
+
