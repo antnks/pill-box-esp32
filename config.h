@@ -1,10 +1,8 @@
+#include "wifi_pass.h"
+
 long HOUR = 3600000; //60*60*1000
 unsigned int RED = 15;
 unsigned int HAL = 13;
-char *WIFISSID = "mywifi";
-char *WIFIPSK = "mypass";
-char *CONFURL = "https://myserver/config";
-char *LOGURL = "https://myserver/script";
 
 int *pill; // deadline hours
 int *done; // pill taken or not
