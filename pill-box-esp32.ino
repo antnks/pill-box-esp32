@@ -74,6 +74,8 @@ void loop()
   if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0)
   {
     state = STATE_OVERDUE;
+    Serial.println("Overdue:");
+    Serial.println(pill[pill_hour]);
   }
 
   // blink if open for too long
@@ -90,4 +92,3 @@ void loop()
 
   delay(500);
 }
-

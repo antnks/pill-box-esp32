@@ -153,33 +153,26 @@ void setNtp()
   Serial.println(get_hour());
 }
 
-// TODO: create algorithm to distribute pills across hours
+// fill array with nearest pill to every hour
 void calc_hours(int count)
 {
-  hours[0] = 1;
-  hours[1] = 1;
-  hours[2] = 1;
-  hours[3] = 0;
-  hours[4] = 0;
-  hours[5] = 0;
-  hours[6] = 0;
-  hours[7] = 0;
-  hours[8] = 0;
-  hours[9] = 0;
-  hours[10] = 0;
-  hours[11] = 0;
-  hours[12] = 0;
-  hours[13] = 0;
-  hours[14] = 0;
-  hours[15] = 0;
-  hours[16] = 0;
-  hours[17] = 1;
-  hours[18] = 1;
-  hours[19] = 1;
-  hours[20] = 1;
-  hours[21] = 1;
-  hours[22] = 1;
-  hours[23] = 1;
+  for (int i=0; i<24; i++)
+  {
+    int nearest = 25;
+    int nearest_idx = count+1;
+    for(int j=0; j<count; j++)
+    {
+      int diff1 = abs(pill[j] - i);
+      int diff2 = 24 - diff1;
+      int diff = (diff1 < diff2)?diff1:diff2;
+      if(diff < nearest)
+      {
+        nearest = diff;
+        nearest_idx = j;
+      }
+    }
+    hours[i] = nearest_idx;
+  }
 }
 
 void blink1()
