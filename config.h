@@ -6,9 +6,9 @@ char *WIFIPSK = "mypass";
 char *CONFURL = "https://myserver/config";
 char *LOGURL = "https://myserver/script";
 
-unsigned int morning;
-unsigned int evening;
-bool isMorningDone;
+int *pill; // deadline hours
+int *done; // pill taken or not
+int hours[24]; // distribution of hours, hours[hour] = pill_idx
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
@@ -136,13 +136,6 @@ unsigned int get_hour()
   return timeinfo.tm_hour;
 }
 
-bool morningDone()
-{
-  int hour = get_hour();
-
-  return hour < morning + (evening - morning)/2;
-}
-
 void setNtp()
 {
   configTime(0, 0, "pool.ntp.org");
@@ -160,6 +153,35 @@ void setNtp()
   Serial.println();
   Serial.print("Current hour: ");
   Serial.println(get_hour());
+}
+
+// TODO: create algorithm to distribute pills across hours
+void calc_hours(int count)
+{
+  hours[0] = 1;
+  hours[1] = 1;
+  hours[2] = 1;
+  hours[3] = 0;
+  hours[4] = 0;
+  hours[5] = 0;
+  hours[6] = 0;
+  hours[7] = 0;
+  hours[8] = 0;
+  hours[9] = 0;
+  hours[10] = 0;
+  hours[11] = 0;
+  hours[12] = 0;
+  hours[13] = 0;
+  hours[14] = 0;
+  hours[15] = 0;
+  hours[16] = 0;
+  hours[17] = 1;
+  hours[18] = 1;
+  hours[19] = 1;
+  hours[20] = 1;
+  hours[21] = 1;
+  hours[22] = 1;
+  hours[23] = 1;
 }
 
 void blink1()
