@@ -26,12 +26,13 @@ void setup()
   setNtp();
 
   Serial.println(upload_data(CONFURL));
-  int total_pills = 2;
+  total_pills = 2;
   pill = (int *)malloc(sizeof(int)*total_pills);
   done = (int *)malloc(sizeof(int)*total_pills);
   pill[0] = 7;
   pill[1] = 20;
   calc_hours(total_pills);
+  reset_dones();
 
   pinMode(HAL, INPUT_PULLUP);
   pinMode(RED, OUTPUT);
@@ -64,10 +65,13 @@ void loop()
   {
     state = STATE_OPENED;
     lastOpen = millis();
+    reset_dones();
     done[pill_hour] = 1;
     digitalWrite(RED, HIGH);
     Serial.println("opened");
-    Serial.println(upload_data(LOGURL + hour));
+    char buff[256];
+    snprintf(buff, 256, "%s%d", LOGURL, hour);
+    Serial.println(upload_data(buff));
   }
 
   // overdue

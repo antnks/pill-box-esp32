@@ -4,6 +4,7 @@ long HOUR = 3600000; //60*60*1000
 unsigned int RED = 15;
 unsigned int HAL = 13;
 
+int total_pills;
 int *pill; // deadline hours
 int *done; // pill taken or not
 int hours[24]; // distribution of hours, hours[hour] = pill_idx
@@ -173,6 +174,12 @@ void calc_hours(int count)
     }
     hours[i] = nearest_idx;
   }
+}
+
+void reset_dones()
+{
+  for(int i=0;i<total_pills;i++)
+    done[i] = 0;
 }
 
 void blink1()
