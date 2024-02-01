@@ -26,15 +26,20 @@ void setup()
   setNtp();
 
   Serial.println(upload_data(CONFURL));
-  morning = 7;
-  evening = 20;
+  total_pills = 2;
+  pill = (int *)malloc(sizeof(int)*total_pills);
+  done = (int *)malloc(sizeof(int)*total_pills);
+  pill[0] = 7;
+  pill[1] = 20;
+  calc_hours(total_pills);
+  reset_dones();
 
   pinMode(HAL, INPUT_PULLUP);
   pinMode(RED, OUTPUT);
   digitalWrite(RED, LOW);
 
   // initial state is always "pill has been just taken"
-  isMorningDone = morningDone();
+  done[hours[get_hour()]] = 1;
   state = STATE_CLOSED;
   lastOpen = millis();
 
@@ -42,7 +47,8 @@ void setup()
 
 void loop()
 {
-  int hour = get_hour();
+  int hour = get_hour(); // current hour
+  int pill_hour = hours[hour]; // which pill idx belongs to this hour
   unsigned long stamp = millis();
   unsigned long diff = stamp - lastOpen;
 
@@ -59,17 +65,21 @@ void loop()
   {
     state = STATE_OPENED;
     lastOpen = millis();
-    isMorningDone = morningDone();
+    reset_dones();
+    done[pill_hour] = 1;
     digitalWrite(RED, HIGH);
     Serial.println("opened");
-    Serial.println(upload_data(LOGURL + hour));
+    char buff[256];
+    snprintf(buff, 256, "%s%d", LOGURL, hour);
+    Serial.println(upload_data(buff));
   }
 
   // overdue
-  if(state == STATE_CLOSED && (hour >= morning && hour < evening && !isMorningDone ||
-                         hour >= evening && hour < 24      &&  isMorningDone))
+  if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0)
   {
     state = STATE_OVERDUE;
+    Serial.println("Overdue:");
+    Serial.println(pill[pill_hour]);
   }
 
   // blink if open for too long
@@ -86,4 +96,3 @@ void loop()
 
   delay(500);
 }
-

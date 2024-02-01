@@ -1,14 +1,13 @@
+#include "wifi_pass.h"
+
 long HOUR = 3600000; //60*60*1000
 unsigned int RED = 15;
 unsigned int HAL = 13;
-char *WIFISSID = "mywifi";
-char *WIFIPSK = "mypass";
-char *CONFURL = "https://myserver/config";
-char *LOGURL = "https://myserver/script";
 
-unsigned int morning;
-unsigned int evening;
-bool isMorningDone;
+int total_pills;
+int *pill; // deadline hours
+int *done; // pill taken or not
+int hours[24]; // distribution of hours, hours[hour] = pill_idx
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
@@ -136,13 +135,6 @@ unsigned int get_hour()
   return timeinfo.tm_hour;
 }
 
-bool morningDone()
-{
-  int hour = get_hour();
-
-  return hour < morning + (evening - morning)/2;
-}
-
 void setNtp()
 {
   configTime(0, 0, "pool.ntp.org");
@@ -160,6 +152,34 @@ void setNtp()
   Serial.println();
   Serial.print("Current hour: ");
   Serial.println(get_hour());
+}
+
+// fill array with nearest pill to every hour
+void calc_hours(int count)
+{
+  for (int i=0; i<24; i++)
+  {
+    int nearest = 25;
+    int nearest_idx = count+1;
+    for(int j=0; j<count; j++)
+    {
+      int diff1 = abs(pill[j] - i);
+      int diff2 = 24 - diff1;
+      int diff = (diff1 < diff2)?diff1:diff2;
+      if(diff < nearest)
+      {
+        nearest = diff;
+        nearest_idx = j;
+      }
+    }
+    hours[i] = nearest_idx;
+  }
+}
+
+void reset_dones()
+{
+  for(int i=0;i<total_pills;i++)
+    done[i] = 0;
 }
 
 void blink1()
