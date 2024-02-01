@@ -1,8 +1,8 @@
 #include "wifi_pass.h"
 
 long HOUR = 3600000; //60*60*1000
-unsigned int RED = 15;
-unsigned int HAL = 13;
+unsigned int RED = 14;
+unsigned int HAL = 1;
 
 int total_pills;
 int *pill; // deadline hours
