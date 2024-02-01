@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Arduino_JSON.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
@@ -25,12 +26,20 @@ void setup()
 
   setNtp();
 
-  Serial.println(upload_data(CONFURL));
-  total_pills = 2;
+  JSONVar conf = JSON.parse(upload_data(CONFURL));
+  if (JSON.typeof(conf) == "undefined" || JSON.typeof(conf["pills"]) != "array")
+  {
+    Serial.println("Config load failed");
+    return;
+  }
+  Serial.println(conf["pills"]);
+  Serial.println("Total pills:");
+  total_pills = conf["pills"].length();
+  Serial.println(total_pills);
   pill = (int *)malloc(sizeof(int)*total_pills);
   done = (int *)malloc(sizeof(int)*total_pills);
-  pill[0] = 7;
-  pill[1] = 20;
+  for(int i=0; i<total_pills; i++)
+    pill[i] = atoi(conf["pills"][i]);
   calc_hours(total_pills);
   reset_dones();
 
@@ -47,6 +56,9 @@ void setup()
 
 void loop()
 {
+  if (!total_pills)
+    return;
+
   int hour = get_hour(); // current hour
   int pill_hour = hours[hour]; // which pill idx belongs to this hour
   unsigned long stamp = millis();
