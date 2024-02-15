@@ -1,7 +1,7 @@
 #include "wifi_pass.h"
 
-#define HOUR_GRAN 24
-
+// more granular hours - every 30 min
+unsigned int HOUR_GRAN = 48;
 long HOUR = 3600000; //60*60*1000
 unsigned int RED = 15;
 unsigned int HAL = 13;
@@ -9,7 +9,7 @@ unsigned int HAL = 13;
 int total_pills;
 int *pill; // deadline hours
 int *done; // pill taken or not
-int hours[HOUR_GRAN]; // distribution of hours, hours[hour] = pill_idx
+int *hours; // distribution of hours, hours[hour] = pill_idx
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
@@ -128,13 +128,16 @@ unsigned int get_hour()
 {
   time_t now;
   struct tm timeinfo;
+  int granularity;
 
   time(&now);
   setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
   tzset();
   localtime_r(&now, &timeinfo);
 
-  return timeinfo.tm_hour;
+  granularity = timeinfo.tm_min / (60/(HOUR_GRAN/24));
+
+  return timeinfo.tm_hour*(HOUR_GRAN/24) + granularity;
 }
 
 void setNtp()
