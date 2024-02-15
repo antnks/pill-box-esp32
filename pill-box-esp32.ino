@@ -16,6 +16,9 @@ void setup()
   Serial.begin(9600);
   Serial.println();
 
+  pinMode(HAL, INPUT_PULLUP);
+  pinMode(RED, OUTPUT);
+
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(WIFISSID, WIFIPSK);
 
@@ -24,34 +27,38 @@ void setup()
     Serial.print(".");
   Serial.println(" connected");
 
+  blink1();
   setNtp();
 
-  JSONVar conf = JSON.parse(upload_data(CONFURL));
+  char buff[256];
+  snprintf(buff, 256, "%s?box=%d&action=config", APIURL, boxid);
+  JSONVar conf = JSON.parse(upload_data(buff));
   if (JSON.typeof(conf) == "undefined" || JSON.typeof(conf["pills"]) != "array")
   {
     Serial.println("Config load failed");
     return;
   }
+
+  blink2();
+
   Serial.println(conf["pills"]);
   Serial.println("Total pills:");
   total_pills = conf["pills"].length();
   Serial.println(total_pills);
   pill = (int *)malloc(sizeof(int)*total_pills);
   done = (int *)malloc(sizeof(int)*total_pills);
+  hours = (int *)malloc(sizeof(int)*HOUR_GRAN);
   for(int i=0; i<total_pills; i++)
-    pill[i] = atoi(conf["pills"][i]);
+    pill[i] = atoi(conf["pills"][i])*(HOUR_GRAN/24);
   calc_hours(total_pills);
   reset_dones();
-
-  pinMode(HAL, INPUT_PULLUP);
-  pinMode(RED, OUTPUT);
-  digitalWrite(RED, LOW);
 
   // initial state is always "pill has been just taken"
   done[hours[get_hour()]] = 1;
   state = STATE_CLOSED;
   lastOpen = millis();
 
+  digitalWrite(RED, LOW);
 }
 
 void loop()
@@ -82,7 +89,7 @@ void loop()
     digitalWrite(RED, HIGH);
     Serial.println("opened");
     char buff[256];
-    snprintf(buff, 256, "%s%d", LOGURL, hour);
+    snprintf(buff, 256, "%s?box=%d&action=open&h=%d&gran=%d", APIURL, boxid, hour, HOUR_GRAN);
     Serial.println(upload_data(buff));
   }
 

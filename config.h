@@ -1,5 +1,7 @@
 #include "wifi_pass.h"
 
+// more granular hours - every 30 min
+unsigned int HOUR_GRAN = 48;
 long HOUR = 3600000; //60*60*1000
 unsigned int RED = 14;
 unsigned int HAL = 1;
@@ -7,7 +9,7 @@ unsigned int HAL = 1;
 int total_pills;
 int *pill; // deadline hours
 int *done; // pill taken or not
-int hours[24]; // distribution of hours, hours[hour] = pill_idx
+int *hours; // distribution of hours, hours[hour] = pill_idx
 
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
@@ -126,13 +128,16 @@ unsigned int get_hour()
 {
   time_t now;
   struct tm timeinfo;
+  int granularity;
 
   time(&now);
   setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
   tzset();
   localtime_r(&now, &timeinfo);
 
-  return timeinfo.tm_hour;
+  granularity = timeinfo.tm_min / (60/(HOUR_GRAN/24));
+
+  return timeinfo.tm_hour*(HOUR_GRAN/24) + granularity;
 }
 
 void setNtp()
@@ -157,14 +162,14 @@ void setNtp()
 // fill array with nearest pill to every hour
 void calc_hours(int count)
 {
-  for (int i=0; i<24; i++)
+  for (int i=0; i<HOUR_GRAN; i++)
   {
-    int nearest = 25;
-    int nearest_idx = count+1;
+    int nearest = HOUR_GRAN + 1;
+    int nearest_idx = count + 1;
     for(int j=0; j<count; j++)
     {
       int diff1 = abs(pill[j] - i);
-      int diff2 = 24 - diff1;
+      int diff2 = HOUR_GRAN - diff1;
       int diff = (diff1 < diff2)?diff1:diff2;
       if(diff < nearest)
       {
