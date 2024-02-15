@@ -16,6 +16,9 @@ void setup()
   Serial.begin(9600);
   Serial.println();
 
+  pinMode(HAL, INPUT_PULLUP);
+  pinMode(RED, OUTPUT);
+
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(WIFISSID, WIFIPSK);
 
@@ -24,6 +27,7 @@ void setup()
     Serial.print(".");
   Serial.println(" connected");
 
+  blink1();
   setNtp();
 
   char buff[256];
@@ -34,6 +38,9 @@ void setup()
     Serial.println("Config load failed");
     return;
   }
+
+  blink2();
+
   Serial.println(conf["pills"]);
   Serial.println("Total pills:");
   total_pills = conf["pills"].length();
@@ -46,15 +53,12 @@ void setup()
   calc_hours(total_pills);
   reset_dones();
 
-  pinMode(HAL, INPUT_PULLUP);
-  pinMode(RED, OUTPUT);
-  digitalWrite(RED, LOW);
-
   // initial state is always "pill has been just taken"
   done[hours[get_hour()]] = 1;
   state = STATE_CLOSED;
   lastOpen = millis();
 
+  digitalWrite(RED, LOW);
 }
 
 void loop()
