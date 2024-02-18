@@ -77,6 +77,9 @@ void loop()
     state = STATE_CLOSED;
     digitalWrite(RED, LOW);
     Serial.println("closed");
+	char buff[256];
+	snprintf(buff, 256, "%s?box=%d&action=close&h=%d&gran=%d", APIURL, boxid, hour, HOUR_GRAN);
+	Serial.println(upload_data(buff));
   }
 
   // opened
