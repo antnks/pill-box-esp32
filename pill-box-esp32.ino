@@ -30,9 +30,7 @@ void setup()
   blink1();
   setNtp();
 
-  char buff[256];
-  snprintf(buff, 256, "%s?box=%d&action=config", APIURL, boxid);
-  JSONVar conf = JSON.parse(upload_data(buff));
+  JSONVar conf = JSON.parse(api_send(ACTION_CONFIG, -1));
   if (JSON.typeof(conf) == "undefined" || JSON.typeof(conf["pills"]) != "array")
   {
     Serial.println("Config load failed");
@@ -61,6 +59,8 @@ void setup()
   digitalWrite(RED, LOW);
 }
 
+int prev_hour = -1;
+
 void loop()
 {
   if (!total_pills)
@@ -71,15 +71,19 @@ void loop()
   unsigned long stamp = millis();
   unsigned long diff = stamp - lastOpen;
 
+  if (prev_hour != hour)
+  {
+    prev_hour = hour;
+    Serial.println(api_send(ACTION_PING, hour));
+  }
+
   // closed
   if(state != STATE_CLOSED && digitalRead(HAL) == STATE_CLOSED)
   {
     state = STATE_CLOSED;
     digitalWrite(RED, LOW);
     Serial.println("closed");
-	char buff[256];
-	snprintf(buff, 256, "%s?box=%d&action=close&h=%d&gran=%d", APIURL, boxid, hour, HOUR_GRAN);
-	Serial.println(upload_data(buff));
+    Serial.println(api_send(ACTION_CLOSE, hour));
   }
 
   // opened
@@ -91,9 +95,7 @@ void loop()
     done[pill_hour] = 1;
     digitalWrite(RED, HIGH);
     Serial.println("opened");
-    char buff[256];
-    snprintf(buff, 256, "%s?box=%d&action=open&h=%d&gran=%d", APIURL, boxid, hour, HOUR_GRAN);
-    Serial.println(upload_data(buff));
+    Serial.println(api_send(ACTION_OPEN, hour));
   }
 
   // overdue
