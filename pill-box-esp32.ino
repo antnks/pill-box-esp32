@@ -59,6 +59,8 @@ void setup()
   digitalWrite(RED, LOW);
 }
 
+int prev_hour = -1;
+
 void loop()
 {
   if (!total_pills)
@@ -68,6 +70,12 @@ void loop()
   int pill_hour = hours[hour]; // which pill idx belongs to this hour
   unsigned long stamp = millis();
   unsigned long diff = stamp - lastOpen;
+
+  if (prev_hour != hour)
+  {
+    prev_hour = hour;
+    Serial.println(api_send(ACTION_PING, hour));
+  }
 
   // closed
   if(state != STATE_CLOSED && digitalRead(HAL) == STATE_CLOSED)
