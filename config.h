@@ -11,6 +11,11 @@ int *pill; // deadline hours
 int *done; // pill taken or not
 int *hours; // distribution of hours, hours[hour] = pill_idx
 
+const char ACTION_CONFIG[] = "config";
+const char ACTION_OPEN[] = "open";
+const char ACTION_CLOSE[] = "close";
+const char ACTION_PING[] = "ping";
+
 unsigned long cooldown = 3000;
 unsigned long open_too_long = 10000;
 
@@ -75,8 +80,12 @@ const char *rootCACertificate= \
       "MldlTTKB3zhThV1+XWYp6rjd5JW1zbVWEkLNxE7GJThEUG3szgBVGP7pSWTUTsqX\n" \
       "nLRbwHOoq7hHwg==\n" \
       "-----END CERTIFICATE-----\n";
-  String upload_data(char *URL)
+
+String api_send(const char *action, int hour)
 {
+  char URL[256];
+  snprintf(URL, 256, "%s?box=%d&action=%s&h=%d&gran=%d", APIURL, boxid, action, hour, HOUR_GRAN);
+
   WiFiClientSecure *client = new WiFiClientSecure;
   if(client)
   {
