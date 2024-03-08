@@ -74,6 +74,7 @@ void loop()
   if (prev_hour != hour)
   {
     prev_hour = hour;
+    setNtp();
     Serial.println(api_send(ACTION_PING, hour));
   }
 
