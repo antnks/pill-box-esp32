@@ -86,7 +86,7 @@ if ($action == "cron")
         $stamp  = $i . ".txt";
         $notify = $i . ".lock";
 
-        if (!file_exists($config))
+        if (!file_exists($config) || !file_exists($stamp))
             break;
         $event = explode("\n", file_get_contents($stamp));
         $json = json_decode(file_get_contents($config), true);
