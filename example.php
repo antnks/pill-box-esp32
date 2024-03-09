@@ -111,7 +111,7 @@ if ($action == "cron")
 				$iv = hex2bin($_GET["i"]);
 				$botApiToken = openssl_decrypt(hex2bin($encryptedToken), "aes-128-cbc", $key, OPENSSL_RAW_DATA, $iv);
 				$channelId = $json["chat"];
-				$text = "Pill overdue " . $json["pills"][$hours[$current_hour]];
+				$text = $json["name"] . " " . $json["pills"][$hours[$current_hour]] . "h pill overdue";
 				$query = http_build_query([
 					'chat_id' => $channelId,
 					'text' => $text,
