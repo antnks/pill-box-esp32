@@ -89,7 +89,8 @@ String api_send(const char *action, int hour)
   WiFiClientSecure *client = new WiFiClientSecure;
   if(client)
   {
-    client->setInsecure();
+    X509List cert(rootCACertificate);
+    client->setTrustAnchors(&cert);
 
     {
       HTTPClient https;

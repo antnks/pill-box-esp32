@@ -28,6 +28,7 @@ void setup()
 	Serial.println(" connected");
 
 	blink1();
+
 	setNtp();
 	setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
 	tzset();
