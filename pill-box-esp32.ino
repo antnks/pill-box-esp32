@@ -29,6 +29,8 @@ void setup()
 
 	blink1();
 	setNtp();
+	setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
+	tzset();
 
 	JSONVar conf = JSON.parse(api_send(ACTION_CONFIG, -1));
 	if (JSON.typeof(conf) == "undefined" || JSON.typeof(conf["pills"]) != "array")
@@ -79,7 +81,6 @@ void loop()
 	if (prev_hour != hour)
 	{
 		prev_hour = hour;
-		setNtp();
 		Serial.println(api_send(ACTION_PING, hour));
 	}
 
