@@ -23,7 +23,7 @@ int STATE_CLOSED = 0;
 int STATE_OPENED = 1;
 int STATE_OVERDUE = 2;
 
-const char *rootCACertificate= \
+const char *rootCACertificate PROGMEM = \
     /*
     "-----BEGIN CERTIFICATE-----\n" \
     "MIIDzTCCArWgAwIBAgIQCjeHZF5ftIwiTv0b7RQMPDANBgkqhkiG9w0BAQsFADBa\n" \
@@ -108,8 +108,9 @@ String api_send(const char *action, int hour)
           if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
           {
             String payload = https.getString();
-            return payload;
             //Serial.println(payload);
+            delete client;
+            return payload;
           }
         }
         else
@@ -124,13 +125,13 @@ String api_send(const char *action, int hour)
         Serial.printf("Unable to connect\n");
       }
     }
-  
-    delete client;
   }
   else
   {
     Serial.println("Unable to create client");
   }
+
+  delete client;
   return "";
 }
 
@@ -141,8 +142,6 @@ unsigned int get_hour()
   int granularity;
 
   time(&now);
-  setenv("TZ", "EET-2EEST,M3.5.0/3,M10.5.0/4", 1);
-  tzset();
   localtime_r(&now, &timeinfo);
 
   granularity = timeinfo.tm_min / (60/(HOUR_GRAN/24));
