@@ -102,6 +102,7 @@ if ($action == "cron")
 
 		if ($hours[$current_hour] != $hours[$last_val] && $current_hour == $pills[$hours[$current_hour]]+$alert)
 		{
+			clearstatcache();
 			if(!file_exists($notify))
 			{
 				file_put_contents($notify, "");
@@ -120,9 +121,11 @@ if ($action == "cron")
 				file_get_contents($url);
 			}
 		}
-		else if (file_exists($notify))
+		else
 		{
-			unlink($notify);
+			clearstatcache();
+			if(!file_exists($notify))
+				unlink($notify);
 		}
 	 }
 }
