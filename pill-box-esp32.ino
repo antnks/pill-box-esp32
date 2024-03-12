@@ -85,7 +85,7 @@ void loop()
 	}
 
 	// closed
-	if(state != STATE_CLOSED && digitalRead(HAL) == STATE_CLOSED)
+	if(state == STATE_OPENED && digitalRead(HAL) == STATE_CLOSED)
 	{
 		state = STATE_CLOSED;
 		digitalWrite(RED, LOW);
@@ -127,3 +127,4 @@ void loop()
 
 	delay(500);
 }
+
