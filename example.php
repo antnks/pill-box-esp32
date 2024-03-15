@@ -56,6 +56,7 @@ if (isset($_GET["box"]) && is_numeric($_GET["box"]))
 	$id = $_GET["box"];
 $config = $id . ".conf";
 $stamp  = $id . ".txt";
+$log    = $id . "_log.txt";
 
 $action = "n/a";
 if (isset($_GET["action"]))
@@ -73,6 +74,8 @@ if ($action == "open")
 {
 	$timestamp = new DateTime();
 	file_put_contents($stamp, $gran . "\n" . $hour . "\n" . $timestamp->format('c'));
+	$msg = date('Y-m-d H:i:s') . ",open\n";
+	file_put_contents($log, $msg, FILE_APPEND);
 }
 if ($action == "config" && file_exists($config))
 {
