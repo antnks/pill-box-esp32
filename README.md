@@ -10,4 +10,4 @@ For ESP8266 boards use esp8266 branch.
 * Box blinks when you miss to take your pill
 
 * Server script sends Telegram notification
-* 
+  
