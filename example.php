@@ -21,8 +21,8 @@ function calc_hours()
 			$diff = ($diff1 < $diff2)?$diff1:$diff2;
 			if($diff < $nearest)
 			{
-			  $nearest = $diff;
-			  $nearest_idx = $j;
+				$nearest = $diff;
+				$nearest_idx = $j;
 			}
 		}
 		$hours[$i] = $nearest_idx;
@@ -79,7 +79,7 @@ if ($action == "open")
 }
 if ($action == "config" && file_exists($config))
 {
-	 echo file_get_contents($config);
+	echo file_get_contents($config);
 }
 if ($action == "cron")
 {
@@ -103,6 +103,11 @@ if ($action == "cron")
 		$hours = calc_hours();
 		$alert = intval($json["alert"]);
 
+		clearstatcache();
+		$fe = file_exists($notify)?"true":"false";
+		$debug_log = $i . " " . date('Y-m-d H:i:s') . " " . $last_hour . " " . $current_hour . " " . $hours[$current_hour] . " " . $hours[$last_val] . " " . $last_val . " " . $pills[$hours[$current_hour]] . " " . $alert . " " . $fe . "\n";
+		file_put_contents("debug_log.txt", $debug_log, FILE_APPEND);
+
 		if ($hours[$current_hour] != $hours[$last_val] && $current_hour == $pills[$hours[$current_hour]]+$alert)
 		{
 			clearstatcache();
@@ -122,14 +127,21 @@ if ($action == "cron")
 				]);
 				$url = "https://api.telegram.org/bot{$botApiToken}/sendMessage?{$query}";
 				file_get_contents($url);
+
+				$HOUR_GRAN = 48;
+				$current_hour = hour_resolution(intval(date("H")), intval(date("i")));
+				$timestamp = new DateTime();
+				file_put_contents($stamp, $HOUR_GRAN . "\n" . $current_hour . "\n" . $timestamp->format('c'));
+
+				$log = $i . "_log.txt";
+				$msg = date('Y-m-d H:i:s') . ",miss\n";
+				file_put_contents($log, $msg, FILE_APPEND);
 			}
 		}
 		else
 		{
-			clearstatcache();
-			if(!file_exists($notify))
-				unlink($notify);
+			unlink($notify);
 		}
-	 }
+	}
 }
 ?>
