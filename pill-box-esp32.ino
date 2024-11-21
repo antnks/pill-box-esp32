@@ -141,7 +141,7 @@ void loop()
 	}
 
 	// overdue
-	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0 && pill_hour != fake_pill)
+	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0 && pill_hour != fake_idx)
 	{
 		state = STATE_OVERDUE;
 		Serial.println("Overdue:");
@@ -162,4 +162,3 @@ void loop()
 
 	delay(500);
 }
-
