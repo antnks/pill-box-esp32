@@ -11,6 +11,12 @@ unsigned long lastOpen;
 int state;
 WiFiMulti WiFiMulti;
 
+// TODO fake pill hack
+int fake_idx = -1;
+int real_idx = -1;
+int fake_pill = -1;
+int real_pill = -1;
+
 void setup()
 {
 	Serial.begin(9600);
@@ -44,12 +50,38 @@ void setup()
 	Serial.println(conf["pills"]);
 	Serial.println("Total pills:");
 	total_pills = conf["pills"].length();
+
+	// TODO a hack for single pill config
+	if (total_pills == 1)
+	{
+		real_pill = atoi(conf["pills"][0]);
+		fake_pill = real_pill / 2;
+		fake_idx = 0;
+		real_idx = 1;
+		if (fake_pill < 6)
+		{
+			fake_pill += 12;
+			fake_idx = 1;
+			real_idx = 0;
+		}
+		total_pills += 1;
+		Serial.println("(added fake pill)");
+	}
+
 	Serial.println(total_pills);
 	pill = (int *)malloc(sizeof(int)*total_pills);
 	done = (int *)malloc(sizeof(int)*total_pills);
 	hours = (int *)malloc(sizeof(int)*HOUR_GRAN);
-	for(int i=0; i<total_pills; i++)
-		pill[i] = atoi(conf["pills"][i])*(HOUR_GRAN/24);
+	// TODO hadle special case when single pill used
+	if (fake_idx >= 0)
+	{
+		pill[fake_idx] = fake_pill*(HOUR_GRAN/24);
+		pill[real_idx] = real_pill*(HOUR_GRAN/24);
+	}
+	// otherwise proceed as always
+	else
+		for(int i=0; i<total_pills; i++)
+			pill[i] = atoi(conf["pills"][i])*(HOUR_GRAN/24);
 	calc_hours(total_pills);
 	reset_dones();
 
@@ -96,17 +128,20 @@ void loop()
 	// opened
 	if(state != STATE_OPENED && digitalRead(HAL) == STATE_OPENED && millis() > lastOpen + cooldown)
 	{
+		String res;
 		state = STATE_OPENED;
 		lastOpen = millis();
 		reset_dones();
 		done[pill_hour] = 1;
-		digitalWrite(RED, HIGH);
 		Serial.println("opened");
-		Serial.println(api_send(ACTION_OPEN, hour));
+		res = api_send(ACTION_OPEN, hour);
+		Serial.println(res);
+		if (res == "")
+			digitalWrite(RED, HIGH);
 	}
 
 	// overdue
-	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0)
+	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0 && pill_hour != fake_pill)
 	{
 		state = STATE_OVERDUE;
 		Serial.println("Overdue:");
