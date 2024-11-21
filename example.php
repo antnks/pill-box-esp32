@@ -94,6 +94,23 @@ if ($action == "cron")
 		$event = explode("\n", file_get_contents($stamp));
 		$json = json_decode(file_get_contents($config), true);
 
+		// TODO special hack for a single pill, we need to add a fake one, otherwise single pill takes all 24h
+		if (count($json["pills"]) == 1)
+		{
+			$real_pill = $json["pills"][0];
+			$fake_pill = intval($real_pill / 2);
+			$fake_idx = 0;
+			$real_idx = 1;
+			if ($fake_pill < 6)
+			{
+				$fake_pill += 12;
+				$fake_idx = 1;
+				$real_idx = 0;
+			}
+			$json["pills"][$fake_idx] = $fake_pill;
+			$json["pills"][$real_idx] = $real_pill;
+		}
+
 		$HOUR_GRAN = $event[0];
 		$last_hour = $event[1];
 		$pills = calc_pills($json["pills"]);
@@ -108,12 +125,26 @@ if ($action == "cron")
 		$debug_log = $i . " " . date('Y-m-d H:i:s') . " " . $last_hour . " " . $current_hour . " " . $hours[$current_hour] . " " . $hours[$last_val] . " " . $last_val . " " . $pills[$hours[$current_hour]] . " " . $alert . " " . $fe . "\n";
 		file_put_contents("debug_log.txt", $debug_log, FILE_APPEND);
 
+		// last pill taken is not current and time is after pill's time - this is considered a miss
 		if ($hours[$current_hour] != $hours[$last_val] && $current_hour == $pills[$hours[$current_hour]]+$alert)
 		{
 			clearstatcache();
 			if(!file_exists($notify))
 			{
+				// mark ithis pill as processed
+				$HOUR_GRAN = 48;
+				$current_hour = hour_resolution(intval(date("H")), intval(date("i")));
+				$timestamp = new DateTime();
+				file_put_contents($stamp, $HOUR_GRAN . "\n" . $current_hour . "\n" . $timestamp->format('c'));
+
+				// put lock file as a marker
 				file_put_contents($notify, "");
+
+				// in case single pill and this one is fake, skip notification
+				if ($hours[$current_hour] == $fake_idx)
+					continue;
+
+				// send notification
 				if (!isset($_GET["k"]) || !isset($_GET["i"]))
 					die();
 				$key = hex2bin($_GET["k"]);
@@ -128,11 +159,7 @@ if ($action == "cron")
 				$url = "https://api.telegram.org/bot{$botApiToken}/sendMessage?{$query}";
 				file_get_contents($url);
 
-				$HOUR_GRAN = 48;
-				$current_hour = hour_resolution(intval(date("H")), intval(date("i")));
-				$timestamp = new DateTime();
-				file_put_contents($stamp, $HOUR_GRAN . "\n" . $current_hour . "\n" . $timestamp->format('c'));
-
+				// save debug log
 				$log = $i . "_log.txt";
 				$msg = date('Y-m-d H:i:s') . ",miss\n";
 				file_put_contents($log, $msg, FILE_APPEND);
@@ -140,7 +167,8 @@ if ($action == "cron")
 		}
 		else
 		{
-			unlink($notify);
+			// delete, supress warning if file does not exist
+			@unlink($notify);
 		}
 	}
 }
