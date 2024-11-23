@@ -106,9 +106,15 @@ void loop()
 	unsigned long diff = stamp - lastOpen;
 
 	char debug_buff[256];
-	snprintf(debug_buff, 256, "hour=%d, prev_hour=%d, pill_hour=%d, stamp=%lu, lastOpen=%lu, diff=%lu",
-		hour, prev_hour, pill_hour, stamp, lastOpen, diff);
-	Serial.println(debug_buff);
+	snprintf(debug_buff, 256, "hour=%d, prev_hour=%d, pill_hour=%d, stamp=%lu, lastOpen=%lu, diff=%lu, fake_idx=%d, real_idx=%d",
+		hour, prev_hour, pill_hour, stamp, lastOpen, diff, fake_idx, real_idx);
+	if (!((stamp/1000) % 5))
+	{
+		Serial.println("");
+		Serial.println(debug_buff);
+	}
+	else
+		Serial.print("~");
 
 	if (prev_hour != hour)
 	{
