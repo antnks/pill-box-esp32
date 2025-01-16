@@ -141,7 +141,7 @@ if ($action == "cron")
 				file_put_contents($notify, "");
 
 				// in case single pill and this one is fake, skip notification
-				if ($hours[$current_hour] == $fake_idx)
+				if (count($json["pills"]) == 1 && $hours[$current_hour] == $fake_idx)
 					continue;
 
 				// send notification

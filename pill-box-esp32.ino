@@ -90,6 +90,13 @@ void setup()
 	state = STATE_CLOSED;
 	lastOpen = millis();
 
+	for (int i=0; i<HOUR_GRAN; i++)
+		Serial.println(hours[i]);
+	for (int i=0; i<total_pills; i++)
+		Serial.println(pill[i]);
+	for (int i=0; i<total_pills; i++)
+		Serial.println(done[i]);
+
 	digitalWrite(RED, LOW);
 }
 
@@ -106,8 +113,8 @@ void loop()
 	unsigned long diff = stamp - lastOpen;
 
 	char debug_buff[256];
-	snprintf(debug_buff, 256, "hour=%d, prev_hour=%d, pill_hour=%d, stamp=%lu, lastOpen=%lu, diff=%lu, fake_idx=%d, real_idx=%d",
-		hour, prev_hour, pill_hour, stamp, lastOpen, diff, fake_idx, real_idx);
+	snprintf(debug_buff, 256, "state=%d, hour=%d, prev_hour=%d, pill_hour=%d, pill[pill_hour]=%d, done[pill_hour]=%d, stamp=%lu, lastOpen=%lu, diff=%lu, fake_idx=%d, real_idx=%d",
+		state, hour, prev_hour, pill_hour, pill[pill_hour], done[pill_hour], stamp, lastOpen, diff, fake_idx, real_idx);
 	if (!((stamp/1000) % 5))
 	{
 		Serial.println("");
@@ -147,11 +154,19 @@ void loop()
 	}
 
 	// overdue
-	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0 && pill_hour != fake_idx)
+	if(state == STATE_CLOSED && hour >= pill[pill_hour] && done[pill_hour] == 0)
 	{
-		state = STATE_OVERDUE;
-		Serial.println("Overdue:");
-		Serial.println(pill[pill_hour]);
+		// best time to reset_dones is during fake pill time slot
+		if(pill_hour == fake_idx)
+		{
+			reset_dones();
+		}
+		else
+		{
+			state = STATE_OVERDUE;
+			Serial.println("Overdue:");
+			Serial.println(pill[pill_hour]);
+		}
 	}
 
 	// blink if open for too long
