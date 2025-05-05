@@ -94,7 +94,7 @@ if ($action == "cron")
 		$event = explode("\n", file_get_contents($stamp));
 		$json = json_decode(file_get_contents($config), true);
 
-		// TODO special hack for a single pill, we need to add a fake one, otherwise single pill takes all 24h
+		// special hack for a single pill, we need a fake one, otherwise single pill takes all 24h
 		if (count($json["pills"]) == 1)
 		{
 			$real_pill = $json["pills"][0];
@@ -107,6 +107,7 @@ if ($action == "cron")
 				$fake_idx = 1;
 				$real_idx = 0;
 			}
+
 			$json["pills"][$fake_idx] = $fake_pill;
 			$json["pills"][$real_idx] = $real_pill;
 		}
@@ -125,13 +126,13 @@ if ($action == "cron")
 		$debug_log = $i . " " . date('Y-m-d H:i:s') . " " . $last_hour . " " . $current_hour . " " . $hours[$current_hour] . " " . $hours[$last_val] . " " . $last_val . " " . $pills[$hours[$current_hour]] . " " . $alert . " " . $fe . "\n";
 		file_put_contents("debug_log.txt", $debug_log, FILE_APPEND);
 
-		// last pill taken is not current and time is after pill's time - this is considered a miss
+		// last pill taken is not current and time is $alert after pill time - this is considered a miss
 		if ($hours[$current_hour] != $hours[$last_val] && $current_hour == $pills[$hours[$current_hour]]+$alert)
 		{
 			clearstatcache();
 			if(!file_exists($notify))
 			{
-				// mark ithis pill as processed
+				// mark this pill as processed
 				$HOUR_GRAN = 48;
 				$current_hour = hour_resolution(intval(date("H")), intval(date("i")));
 				$timestamp = new DateTime();
@@ -141,7 +142,7 @@ if ($action == "cron")
 				file_put_contents($notify, "");
 
 				// in case single pill and this one is fake, skip notification
-				if (count($json["pills"]) == 1 && $hours[$current_hour] == $fake_idx)
+				if (count($json["pills"]) == 2 && $hours[$current_hour] == $fake_idx)
 					continue;
 
 				// send notification
@@ -167,7 +168,7 @@ if ($action == "cron")
 		}
 		else
 		{
-			// delete, supress warning if file does not exist
+			// delete and @ supress warning if file does not exist
 			@unlink($notify);
 		}
 	}
