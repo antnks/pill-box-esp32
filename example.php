@@ -95,6 +95,7 @@ if ($action == "cron")
 		$json = json_decode(file_get_contents($config), true);
 
 		// special hack for a single pill, we need a fake one, otherwise single pill takes all 24h
+		$fake_idx = -1;
 		if (count($json["pills"]) == 1)
 		{
 			$real_pill = $json["pills"][0];
